@@ -136,3 +136,98 @@ print(CHIS_plot)
 ggsave("CHIS.png", CHIS_plot, width = 10, height = 5, dpi = 700)
 
 ```
+
+# Delayed/Didn't Recieve Care
+```{r}
+
+CHIS_Filtered2 <- AskCHISResults202407100033[-c(5:9, 1), ] %>%
+  select("Citizenship and immigration status (3 levels)","...4", "...7", "...10" ) %>%
+  rename("Yes" = "...4", "No" = "...7", "Total" = "...10")
+
+CHIS_Percent2 <- CHIS_Filtered2 %>%
+  mutate(
+    Yes = as.numeric(Yes),
+    Total = as.numeric(Total),
+    Yes_Percentage = Yes / Total * 100
+  )
+
+# Create the bar graph
+CHIS2_plot <- ggplot(CHIS_Percent2, aes(x = `Citizenship and immigration status (3 levels)`, y = Yes_Percentage, fill = `Citizenship and immigration status (3 levels)`)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Percentage of Latino/Hispanic Children Who Recieved Delayed/No Care at All",
+       x = "Citizenship and Immigration Status",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylim(0, 15)
+
+ggsave("CHIS2.png", CHIS2_plot, width = 10, height = 5, dpi = 700)
+
+```
+
+# Usual Source of Care
+```{r}
+
+CHIS_Filtered3 <- AskCHISResults202407100041[-c(5:9, 1), ] %>%
+  select("Citizenship and immigration status (3 levels)","...4", "...7", "...10" ) %>%
+  rename("Yes" = "...4", "No" = "...7", "Total" = "...10")
+
+CHIS_Percent3 <- CHIS_Filtered3 %>%
+  mutate(
+    Yes = as.numeric(No),
+    Total = as.numeric(Total),
+    Yes_Percentage = Yes / Total * 100
+  )
+
+CHIS_plot3 <- ggplot(CHIS_Percent3, aes(x = `Citizenship and immigration status (3 levels)`, y = No_Percentage, fill = `Citizenship and immigration status (3 levels)`)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Percentage of Latino/Hispanic Children Who Don't Recieve Usual Care",
+       x = "Citizenship and Immigration Status",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylim(0, 20)
+
+ggsave("CHIS3.png", CHIS_plot3, width = 10, height = 5, dpi = 700)
+
+
+```
+
+
+# Multi-Bar Plot
+```{r}
+# Add a column to indicate the source
+CHIS_Percent$Source <- "Climate change makes me stressed/nervous/depressed"
+CHIS_Percent2$Source <- "Delayed or didn't recieve care"
+CHIS_Percent3$Source <- "Has a usual source of care"
+
+# Combine the datasets
+combinedCHIS_data <- bind_rows(CHIS_Percent, CHIS_Percent2, CHIS_Percent3) %>%
+  select(-Total)
+print(combinedCHIS_data)
+
+CHIS_multi <- ggplot(combinedCHIS_data %>% filter(`Citizenship and immigration status (3 levels)` != "Total"), aes(
+  x = `Citizenship and immigration status (3 levels)`, 
+  y = Yes_Percentage, 
+  fill = Source
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Citizenship and Immigration Status",
+    y = "Percentage",
+    fill = "Survey Responses"
+  ) +
+  theme_minimal() +
+  theme(axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20),
+    axis.text.x = element_text(size = 17, angle = 45, hjust = 1),  # Rotate x-axis labels
+    axis.text.y = element_text(size = 17),
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 17)
+  ) +
+  ylim(0, 40)
+
+print(CHIS_multi)
+
+ggsave("CHIS_multi.png", CHIS_multi, width = 15, height = 10, dpi = 700)
+
+```
