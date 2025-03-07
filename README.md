@@ -196,38 +196,47 @@ ggsave("CHIS3.png", CHIS_plot3, width = 10, height = 5, dpi = 700)
 
 # Multi-Bar Plot
 ```{r}
-# Add a column to indicate the source
 CHIS_Percent$Source <- "Climate change makes me stressed/nervous/depressed"
 CHIS_Percent2$Source <- "Delayed or didn't recieve care"
 CHIS_Percent3$Source <- "Has a usual source of care"
 
 # Combine the datasets
-combinedCHIS_data <- bind_rows(CHIS_Percent, CHIS_Percent2, CHIS_Percent3) %>%
-  select(-Total)
-print(combinedCHIS_data)
-
-CHIS_multi <- ggplot(combinedCHIS_data %>% filter(`Citizenship and immigration status (3 levels)` != "Total"), aes(
-  x = `Citizenship and immigration status (3 levels)`, 
-  y = Yes_Percentage, 
-  fill = Source
-)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Citizenship and Immigration Status",
-    y = "Percentage",
-    fill = "Survey Responses"
-  ) +
-  theme_minimal() +
+CHIS_multi <- combinedCHIS_data %>%
+  filter(`Citizenship and immigration status (3 levels)` != "Total") %>%
+  mutate(`Citizenship and immigration status (3 levels)` = 
+           recode(`Citizenship and immigration status (3 levels)`, 
+                  "U.S. born citizen" = "US-born citizen")) %>%
+  ggplot(aes(
+    y = Source,  # Questions are now on the y-axis
+    x = Yes_Percentage, 
+    fill = `Citizenship and immigration status (3 levels)`  # Citizenship status as fill
+  )) +
+  geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
+  geom_text(aes(label = `Citizenship and immigration status (3 levels)`),  # Citizenship status as labels
+            position = position_dodge(width = 0.8), 
+            hjust = -0.2, size = 6, color = "black") +  # Adjust label position
+  scale_y_discrete(labels = c(
+    "Climate change makes me stressed/nervous/depressed" = "Climate-change-related stress or depression",
+    "Delayed or didn't recieve care" = "Delay or lack of health care",
+    "Has a usual source of care" = "Has usual source of health care"
+  )) +  
+  scale_y_discrete(labels = c(
+    "Climate change makes me stressed/nervous/depressed" = "Climate-change-related\nstress or depression",
+    "Delayed or didn't receive care" = "Delay or lack\nof health care",
+    "Has a usual source of care" = "Has usual source\nof health care"
+  )) + # Rename y-axis labels
+  labs(y = "Question Type", x = "Percentage", fill = "Citizenship Status") +  # Adjust labels
+  theme_light() +  # Cleaner theme
   theme(axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20),
-    axis.text.x = element_text(size = 17, angle = 45, hjust = 1),  # Rotate x-axis labels
-    axis.text.y = element_text(size = 17),
-    legend.title = element_text(size = 20),
-    legend.text = element_text(size = 17)
-  ) +
-  ylim(0, 40)
+        axis.title.y = element_text(size = 20),
+        axis.text.x = element_text(size = 17),
+        axis.text.y = element_text(size = 17),
+        panel.grid.minor = element_blank(),
+        legend.position = "none") +  # Remove legend if labels are enough
+  xlim(0, 40)  # Adjust axis limits if needed
 
 print(CHIS_multi)
 
-ggsave("CHIS_multi.png", CHIS_multi, width = 15, height = 10, dpi = 700)
+ggsave("CHIS_multi.png", CHIS_multi, width = 18, height = 10, dpi = 700)
 
 ```
